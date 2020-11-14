@@ -1,10 +1,51 @@
-from sklearn import neural_network
+from sklearn import neural_network, model_selection
 from sklearn.datasets import fetch_openml
 from sklearn.model_selection import train_test_split
 import numpy as np
 import time
 from sklearn import metrics
 import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix
+import pandas as pd
+import seaborn as sn
+
+
+def plot_fig(data):
+    plt.figure(figsize=(20, 13))
+
+    plt.subplot(3, 1, 1)
+    plt.plot(data[0], data[3], 'x-', color='red')
+    plt.xlabel('k')
+    plt.ylabel('Erreur sur le jeu de données')
+    plt.grid(True)
+
+    plt.subplot(3, 1, 2)
+    plt.plot(data[0], data[1], 'x-', color='green')
+    plt.xlabel('k')
+    plt.ylabel("Durée d'entraînement")
+    plt.grid(True)
+
+    plt.subplot(3, 1, 3)
+    plt.plot(data[0], data[2], 'x-', color='blue')
+    plt.xlabel('k')
+    plt.ylabel("Durée de prédiction")
+    plt.grid(True)
+
+    plt.show()
+
+
+def create_neural_network(layers, xtrain, ytrain, xtest, ytest, label):
+    mlp = neural_network.MLPClassifier(hidden_layer_sizes=layers)
+    start_training = time.time()
+    mlp.fit(xtrain, ytrain)
+    final_training = time.time() - start_training
+    start_prediction = time.time()
+    ypred = mlp.predict(xtest)
+    final_prediction = time.time() - start_prediction
+    erreur = metrics.zero_one_loss(ytest, ypred)
+    print(f"Erreur d'un MLP de {label}: {erreur}")
+    print(f"Temps d'apprentissage d'un MLP de {label}: {final_training}")
+    print(f"Temps de prédiction MLP de {label}: {final_prediction}")
 
 
 def main():
@@ -18,7 +59,7 @@ def main():
     mlp = neural_network.MLPClassifier(hidden_layer_sizes=(50))
     mlp.fit(xtrain, ytrain)
     score = mlp.score(xtest, ytest)
-    print(f"Score avec .score : {score}")
+    print(f"Score avec mlp.score : {score}")
 
     # Classe de l’image 4 et sa classe prédite.
     print(mnist.target[4])
@@ -27,9 +68,8 @@ def main():
     # Calcul de précision avec la package metrics.precision_score
     ypredTest = mlp.predict(xtest)
     precision = metrics.precision_score(ytest, ypredTest, average='micro')
-    print(f"Score avec precision_score : {precision}")
+    print(f"Score avec la fonction precision_score : {precision}")
 
-    """
     # Varier le nombre de couches de 1 entre (2 et 100) couches
     _50neuron_layer = []
     print("Variation du nombre de couches de 2 à 100 : ")
@@ -50,198 +90,110 @@ def main():
 
     _50neuron_layer_list = list(zip(*_50neuron_layer))
 
-    plt.figure(figsize=(16, 9))
-    plt.subplot(3, 1, 1)
-    plt.plot(_50neuron_layer_list[0], _50neuron_layer_list[3], 'x-', color='red')
-    plt.xlabel('nb layer')
-    plt.ylabel("Erreur sur le jeu de données")
-    plt.grid(True)
+    plot_fig(_50neuron_layer_list)
 
-    plt.subplot(3, 1, 2)
-    plt.plot(_50neuron_layer_list[0], _50neuron_layer_list[1], 'x-', color='green')
-    plt.xlabel('nb layer')
-    plt.ylabel("Durée d'entraînement")
-    plt.grid(True)
-
-    plt.subplot(3, 1, 3)
-    plt.plot(_50neuron_layer_list[0], _50neuron_layer_list[2], 'x-', color='blue')
-    plt.xlabel('nb layer')
-    plt.ylabel("Durée de prédiction")
-    plt.grid(True)
-
-    plt.show()
-    """
-
-    mlp = neural_network.MLPClassifier(hidden_layer_sizes=tuple(range(60, 10, -1)))
-    start_training = time.time()
-    mlp.fit(xtrain, ytrain)
-    final_training = time.time() - start_training
-    start_prediction = time.time()
-    ypred = mlp.predict(xtest)
-    final_prediction = time.time() - start_prediction
-    erreur = metrics.zero_one_loss(ytest, ypred)
-    print(f"Erreur d'un MLP de 50 couches de 60 à 11 nerones: {erreur}")
-    print(f"Temps d'apprentissage d'un MLP de 50 couches de 60 à 11 nerones: {final_training}")
-    print(f"Temps de prédiction MLP de 50 couches de 60 à 11 nerones: {final_prediction}")
-
-    mlp = neural_network.MLPClassifier(hidden_layer_sizes=tuple(list(range(60, 32, -3)) + list(range(31, 12, -2))))
-    start_training = time.time()
-    mlp.fit(xtrain, ytrain)
-    final_training = time.time() - start_training
-    start_prediction = time.time()
-    ypred = mlp.predict(xtest)
-    final_prediction = time.time() - start_prediction
-    erreur = metrics.zero_one_loss(ytest, ypred)
-    print(f"Erreur d'un MLP de 50 couches -3 puis -2 nerones: {erreur}")
-    print(f"Temps d'apprentissage d'un MLP de 50 couches -3 puis -2 nerones: {final_training}")
-    print(f"Temps de prédiction MLP de 50 couches -3 puis -2 nerones: {final_prediction}")
-
-    mlp = neural_network.MLPClassifier(hidden_layer_sizes=(14, 36, 64))
-    start_training = time.time()
-    mlp.fit(xtrain, ytrain)
-    final_training = time.time() - start_training
-    start_prediction = time.time()
-    ypred = mlp.predict(xtest)
-    final_prediction = time.time() - start_prediction
-    erreur = metrics.zero_one_loss(ytest, ypred)
-    print(f"Erreur d'un MLP de 3 couches 14 36 64 nerones: {erreur}")
-    print(f"Temps d'apprentissage d'un MLP de 3 couches 14 36 64 nerones: {final_training}")
-    print(f"Temps de prédiction MLP de 3 couches 14 36 64 nerones: {final_prediction}")
-
-    mlp = neural_network.MLPClassifier(hidden_layer_sizes=(14, 36, 64, 112, 176, 204, 226, 283))
-    start_training = time.time()
-    mlp.fit(xtrain, ytrain)
-    final_training = time.time() - start_training
-    start_prediction = time.time()
-    ypred = mlp.predict(xtest)
-    final_prediction = time.time() - start_prediction
-    erreur = metrics.zero_one_loss(ytest, ypred)
-    print(f"Erreur d'un MLP de 8 couches 14, 36, 64, 112, 176, 204, 226, 283 nerones: {erreur}")
-    print(f"Temps d'apprentissage d'un MLP de 8 couches 14, 36, 64, 112, 176, 204, 226, 283 nerones: {final_training}")
-    print(f"Temps de prédiction MLP de 8 couches 14, 36, 64, 112, 176, 204, 226, 2832 nerones: {final_prediction}")
-
-    mlp = neural_network.MLPClassifier(hidden_layer_sizes=(64, 92, 117, 208, 117, 92, 64))
-    start_training = time.time()
-    mlp.fit(xtrain, ytrain)
-    final_training = time.time() - start_training
-    start_prediction = time.time()
-    ypred = mlp.predict(xtest)
-    final_prediction = time.time() - start_prediction
-    erreur = metrics.zero_one_loss(ytest, ypred)
-    print(f"Erreur d'un MLP de 7 couches 64, 92, 117, 208, 117, 92, 64 nerones: {erreur}")
-    print(f"Temps d'apprentissage d'un MLP de 7 couches 64, 92, 117, 208, 117, 92, 64 nerones: {final_training}")
-    print(f"Temps de prédiction MLP de 7 couches 64, 92, 117, 208, 117, 92, 64 nerones: {final_prediction}")
+    create_neural_network(tuple(range(60, 10, -1)), xtrain, ytrain, xtest, ytest, "50 couches de 60 à 11 nerones")
+    create_neural_network(tuple(list(range(60, 32, -3)) + list(range(31, 12, -2))), xtrain, ytrain, xtest, ytest,
+                          "50 couches -3 puis -2 nerones")
+    create_neural_network((14, 36, 64), xtrain, ytrain, xtest, ytest, "3 couches 14 36 64 nerones")
+    create_neural_network((14, 36, 64, 112, 176, 204, 226, 283), xtrain, ytrain, xtest, ytest,
+                          "8 couches 14, 36, 64, 112, 176, 204, 226, 283 nerones")
+    create_neural_network((64, 92, 117, 208, 117, 92, 64), xtrain, ytrain, xtest, ytest,
+                          "7 couches 64, 92, 117, 208, 117, 92, 64 nerones")
 
     solving = []
-    print("Variations du solver : ")
+    print("Modification du solver : ")
     for solver in ['lbfgs', 'sgd', 'adam']:
         mlp = neural_network.MLPClassifier(hidden_layer_sizes=(64, 92, 117, 208, 117, 92, 64), solver=solver)
-        debut_entrainement = time.time()
+
+        start_training = time.time()
         mlp.fit(xtrain, ytrain)
-        duree_entrainement = time.time() - debut_entrainement
-        debut_prediction = time.time()
+        final_training = time.time() - start_training
+
+        start_prediction = time.time()
         ypred = mlp.predict(xtest)
-        duree_prediction = time.time() - debut_prediction
-        erreur = metrics.zero_one_loss(ytest, ypred)
-        solving.append((solver, duree_entrainement, duree_prediction, erreur))
+        final_prediction = time.time() - start_prediction
+
+        error = metrics.zero_one_loss(ytest, ypred)
+        solving.append((solver, final_training, final_prediction, error))
         print(f"\t {solving[-1]}")
 
     solving_list = list(zip(*solving))
 
-    plt.figure(figsize=(16, 9))
-    plt.subplot(3, 1, 1)
-    plt.plot(solving_list[0], solving_list[3], 'x-', color='red')
-    plt.xlabel('solver')
-    plt.ylabel('Erreur sur les jeux de données')
-    plt.grid(True)
+    plot_fig(solving_list)
 
-    plt.subplot(3, 1, 2)
-    plt.plot(solving_list[0], solving_list[1], 'x-', color='green')
-    plt.xlabel('solver')
-    plt.ylabel("Durée d'entraînement")
-    plt.grid(True)
-
-    plt.subplot(3, 1, 3)
-    plt.plot(solving_list[0], solving_list[2], 'x-', color='blue')
-    plt.xlabel('solver')
-    plt.ylabel('Durée de prédiction')
-    plt.grid(True)
-
-    plt.show()
-
-    activations = []
+    activ = []
     print("Variations de l'activation : ")
     for activation in ['identity', 'logistic', 'tanh', 'relu']:
         mlp = neural_network.MLPClassifier(hidden_layer_sizes=(64, 92, 117, 208, 117, 92, 64), activation=activation)
-        debut_entrainement = time.time()
+
+        start_training = time.time()
         mlp.fit(xtrain, ytrain)
-        duree_entrainement = time.time() - debut_entrainement
-        debut_prediction = time.time()
+        final_training = time.time() - start_training
+
+        start_prediction = time.time()
         ypred = mlp.predict(xtest)
-        duree_prediction = time.time() - debut_prediction
-        erreur = metrics.zero_one_loss(ytest, ypred)
-        activations.append((activation, duree_entrainement, duree_prediction, erreur))
-        print(f"\t {activations[-1]}")
+        final_prediction = time.time() - start_prediction
 
-    activations_liste = list(zip(*activations))
+        error = metrics.zero_one_loss(ytest, ypred)
+        activ.append((activation, final_training, final_prediction, error))
+        print(f"\t {activ[-1]}")
 
-    plt.figure(figsize=(16, 9))
-    plt.subplot(3, 1, 1)
-    plt.plot(activations_liste[0], activations_liste[3], 'x-', color='red')
-    plt.xlabel('Fonction d\'activation')
-    plt.ylabel('Erreur sur les jeux de données')
-    plt.grid(True)
+    activ_liste = list(zip(*activ))
 
-    plt.subplot(3, 1, 2)
-    plt.plot(activations_liste[0], activations_liste[1], 'x-', color="green")
-    plt.xlabel('fct activation')
-    plt.ylabel("Durée d'entraînement")
-    plt.grid(True)
+    plot_fig(activ_liste)
 
-    plt.subplot(3, 1, 3)
-    plt.plot(activations_liste[0], activations_liste[2], 'x-', color="blue")
-    plt.xlabel('fct activation')
-    plt.ylabel('Durée de prédiction')
-    plt.grid(True)
-
-    plt.show()
-
-    regularisations = []
-    print("Variations de la régularisation : ")
+    regul = []
+    print("Evolution de la régularisation : ")
     for regularisation in np.arange(0.0001, 0.01, 0.001):
         mlp = neural_network.MLPClassifier(hidden_layer_sizes=(64, 92, 117, 208, 117, 92, 64), alpha=regularisation)
-        debut_entrainement = time.time()
+
+        start_training = time.time()
         mlp.fit(xtrain, ytrain)
-        duree_entrainement = time.time() - debut_entrainement
-        debut_prediction = time.time()
+        final_training = time.time() - start_training
+
+        start_prediction = time.time()
         ypred = mlp.predict(xtest)
-        duree_prediction = time.time() - debut_prediction
-        erreur = metrics.zero_one_loss(ytest, ypred)
-        regularisations.append((regularisation, duree_entrainement, duree_prediction, erreur))
-        print(f"\t {regularisations[-1]}")
+        final_prediction = time.time() - start_prediction
 
-    regularisations_liste = list(zip(*regularisations))
+        error = metrics.zero_one_loss(ytest, ypred)
+        regul.append((regularisation, final_training, final_prediction, error))
+        print(f"\t {regul[-1]}")
 
+    regul_liste = list(zip(*regul))
+
+    plot_fig(regul_liste)
+
+    best_layer = (64, 92, 117, 208, 117, 92, 64)
+    best_solver = "adam"
+    best_activation = "relu"
+    best_regularisation = 0.008
+
+    best_mlp = neural_network.MLPClassifier(hidden_layer_sizes=best_layer, solver=best_solver,
+                                            activation=best_activation, alpha=best_regularisation)
+    start_training = time.time()
+    best_mlp.fit(xtrain, ytrain)
+    best_final_entrainement = time.time() - start_training
+
+    start_prediction = time.time()
+    ypred = best_mlp.predict(xtest)
+    best_final_prediction = time.time() - start_prediction
+
+    cross_val = model_selection.cross_val_score(best_mlp, data, target, cv=10)
+    best_error = 1 - np.mean(cross_val)
+
+    print(f"Durée de l'entraînement : {best_final_entrainement}")
+    print(f"Durée de la prédiction : {best_final_prediction}")
+    print(f"Erreur : {best_error}")
+
+    cm = confusion_matrix(ytest, ypred)
+    df_cm = pd.DataFrame(cm, columns=np.unique(ytest), index=np.unique(ytest))
+    df_cm.index.name = 'Valeur réelle'
+    df_cm.columns.name = 'Valeur prédite'
     plt.figure(figsize=(16, 9))
-    plt.subplot(3, 1, 1)
-    plt.plot(regularisations_liste[0], regularisations_liste[3], 'x-', color='red')
-    plt.xlabel('Régularisation')
-    plt.ylabel('erreur')
-    plt.grid(True)
-
-    plt.subplot(3, 1, 2)
-    plt.plot(regularisations_liste[0], regularisations_liste[1], 'x-', color="green")
-    plt.xlabel('Régularisation')
-    plt.ylabel("Durée d'entraînement")
-    plt.grid(True)
-
-    plt.subplot(3, 1, 3)
-    plt.plot(regularisations_liste[0], regularisations_liste[2], 'x-', color='blue')
-    plt.xlabel('Régularisation')
-    plt.ylabel('Durée de prédiction')
-    plt.grid(True)
-
+    sn.heatmap(df_cm, cmap="Blues", annot=True)
     plt.show()
+
 
 if __name__ == "__main__":
     main()

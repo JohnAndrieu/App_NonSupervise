@@ -1,10 +1,36 @@
-from sklearn import neighbors, model_selection
+from sklearn import neighbors, model_selection, metrics
 from sklearn.datasets import fetch_openml
-from sklearn.model_selection import train_test_split, KFold
+from sklearn.model_selection import train_test_split
 import numpy as np
 import time
-from sklearn import metrics
 import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix
+import pandas as pd
+import seaborn as sn
+
+
+def plot_fig(data):
+    plt.figure(figsize=(20, 13))
+
+    plt.subplot(3, 1, 1)
+    plt.plot(data[0], data[3], 'x-', color='red')
+    plt.xlabel('k')
+    plt.ylabel('Erreur sur le jeu de données')
+    plt.grid(True)
+
+    plt.subplot(3, 1, 2)
+    plt.plot(data[0], data[1], 'x-', color='green')
+    plt.xlabel('k')
+    plt.ylabel("Durée d'entraînement")
+    plt.grid(True)
+
+    plt.subplot(3, 1, 3)
+    plt.plot(data[0], data[2], 'x-', color='blue')
+    plt.xlabel('k')
+    plt.ylabel("Durée de prédiction")
+    plt.grid(True)
+
+    plt.show()
 
 
 def main():
@@ -33,80 +59,45 @@ def main():
     print("Variations de k :")
     for i in range(2, 16):
         cl = neighbors.KNeighborsClassifier(i)
-        debut_entrainement = time.time()
+
+        start_train = time.time()
         cl.fit(xtrain, ytrain)
-        duree_entrainement = time.time() - debut_entrainement
-        debut_prediction = time.time()
+        final_train = time.time() - start_train
+
+        start_prediction = time.time()
         ypred = cl.predict(xtest)
-        duree_prediction = time.time() - debut_prediction
-        erreur = metrics.zero_one_loss(ytest, ypred)
-        ks.append((i, erreur, duree_entrainement, duree_prediction))
+        final_prediction = time.time() - start_prediction
+
+        error = metrics.zero_one_loss(ytest, ypred)
+        ks.append((i, error, final_train, final_prediction))
         print(f"\t {ks[-1]}")
 
     ks_liste = list(zip(*ks))
 
-    plt.figure(figsize=(20, 13))
+    plot_fig(ks_liste)
 
-    plt.subplot(3, 1, 1)
-    plt.plot(ks_liste[0], ks_liste[3], 'x-', color='red')
-    plt.xlabel('k')
-    plt.ylabel('Erreur sur le jeu de données')
-    plt.grid(True)
-
-    plt.subplot(3, 1, 2)
-    plt.plot(ks_liste[0], ks_liste[1], 'x-', color='green')
-    plt.xlabel('k')
-    plt.ylabel("Durée d'entraînement")
-    plt.grid(True)
-
-    plt.subplot(3, 1, 3)
-    plt.plot(ks_liste[0], ks_liste[2], 'x-', color='blue')
-    plt.xlabel('k')
-    plt.ylabel("Durée de prédiction")
-    plt.grid(True)
-
-    plt.savefig('variation_k')
-    plt.show()
-
-    echantillons = []
+    samples = []
     print("Variations du % train/test : ")
     for i in np.arange(0.7, 0.99, 0.01):
         xtrain_echantillons, xtest_echantillons, ytrain_echantillons, ytest_echantillons = model_selection.train_test_split(
             data, target, train_size=i)
         cl = neighbors.KNeighborsClassifier(3)
-        debut_entrainement = time.time()
+
+        start_train = time.time()
         cl.fit(xtrain_echantillons, ytrain_echantillons)
-        duree_entrainement = time.time() - debut_entrainement
-        debut_prediction = time.time()
+        final_train = time.time() - start_train
+
+        start_prediction = time.time()
         ypred = cl.predict(xtest)
-        duree_prediction = time.time() - debut_prediction
-        erreur = metrics.zero_one_loss(ytest, ypred)
-        echantillons.append((i, duree_entrainement, duree_prediction, erreur))
-        print(f"\t {echantillons[-1]}")
+        final_prediction = time.time() - start_prediction
 
-    sample_list = list(zip(*echantillons))
+        error = metrics.zero_one_loss(ytest, ypred)
+        samples.append((i, final_train, final_prediction, error))
+        print(f"\t {samples[-1]}")
 
-    plt.figure(figsize=(16, 9))
+    sample_list = list(zip(*samples))
 
-    plt.subplot(3, 1, 1)
-    plt.plot(sample_list[0], sample_list[3], 'x-', color='red')
-    plt.xlabel('% train / test')
-    plt.ylabel('Erreur sur le jeu de données')
-    plt.grid(True)
-
-    plt.subplot(3, 1, 2)
-    plt.plot(sample_list[0], sample_list[1], 'x-', color='green')
-    plt.xlabel('% train / test')
-    plt.ylabel("Durée d'entraînement")
-    plt.grid(True)
-
-    plt.subplot(3, 1, 3)
-    plt.plot(sample_list[0], sample_list[2], 'x-', color='blue')
-    plt.xlabel('% train / test')
-    plt.ylabel("Durée de prédiction")
-    plt.grid(True)
-
-    plt.show()
+    plot_fig(sample_list)
 
     dt = []
     print("Evolution de la distance dt : ")
@@ -128,27 +119,7 @@ def main():
 
     dt_list = list(zip(*dt))
 
-    plt.figure(figsize=(16, 9))
-
-    plt.subplot(3, 1, 1)
-    plt.plot(dt_list[0], dt_list[3], 'x-', color='red')
-    plt.xlabel('distance')
-    plt.ylabel('Erreur sur le jeu de données')
-    plt.grid(True)
-
-    plt.subplot(3, 1, 2)
-    plt.plot(dt_list[0], dt_list[1], 'x-', color='green')
-    plt.xlabel('distance')
-    plt.ylabel("Durée d'entraînement")
-    plt.grid(True)
-
-    plt.subplot(3, 1, 3)
-    plt.plot(dt_list[0], dt_list[2], 'x-', color='blue')
-    plt.xlabel('distance')
-    plt.ylabel("Durée de prédiction")
-    plt.grid(True)
-
-    plt.show()
+    plot_fig(dt_list)
 
     training = []
     for i in range(100, 4000, 100):
@@ -172,26 +143,33 @@ def main():
 
     training_list = list(zip(*training))
 
+    plot_fig(training_list)
+
+    best_k = 3
+    best_p = 2
+    best_clf = neighbors.KNeighborsClassifier(best_k, p=best_p)
+
+    start_train = time.time()
+    best_clf.fit(xtrain, ytrain)
+    best_final_train = time.time() - start_train
+
+    start_prediction = time.time()
+    ypred = best_clf.predict(xtest)
+    best_final_prediction = time.time() - start_prediction
+
+    cross_val = model_selection.cross_val_score(best_clf, data, target, cv=10)
+    best_error = 1 - np.mean(cross_val)
+
+    print(f"Durée de l'entraînement : {best_final_train}")
+    print(f"Durée de la prédiction : {best_final_prediction}")
+    print(f"Erreur : {best_error}")
+
+    cm = confusion_matrix(ytest, ypred)
+    df_cm = pd.DataFrame(cm, columns=np.unique(ytest), index=np.unique(ytest))
+    df_cm.index.name = 'Valeur réelle'
+    df_cm.columns.name = 'Valeur prédite'
     plt.figure(figsize=(16, 9))
-
-    plt.subplot(3, 1, 1)
-    plt.plot(training_list[0], training_list[3], 'x-', color='red')
-    plt.xlabel("taille du jeu d'entraînement")
-    plt.ylabel('Erreur sur le jeu de données')
-    plt.grid(True)
-
-    plt.subplot(3, 1, 2)
-    plt.plot(training_list[0], training_list[1], 'x-', color='green')
-    plt.xlabel("taille du jeu d'entraînement")
-    plt.ylabel("Durée d'entraînement")
-    plt.grid(True)
-
-    plt.subplot(3, 1, 3)
-    plt.plot(training_list[0], training_list[2], 'x-', color='blue')
-    plt.xlabel("taille du jeu d'entraînement")
-    plt.ylabel("Durée de prédiction")
-    plt.grid(True)
-
+    sn.heatmap(df_cm, cmap="Blues", annot=True)
     plt.show()
 
 if __name__ == "__main__":
